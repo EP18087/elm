@@ -1,8 +1,128 @@
-# 第10回　EP18087　林　佳吾
+https://elm-lang.org/
+まずは、このサイトにアクセスして、HelloWorldと表示されるプログラムやボタンを押すことで値が増減するなどのプログラムを確認した。
 
-前回までで、マウス座標の取得はできるようになった。
-今回、ドラッグ＆ドロップの実装まで頑張りたい。
+次に、四角い画像を表示することを目標とする。
+その際に、さっきのサイトの
 
+![](https://i.imgur.com/nVJH1kr.png)
+
+という画面の「More!」を選択すると
+
+![](https://i.imgur.com/LmkV2o5.png)
+
+この画面が表示される。この中の左上にあるHTMLの中のShapesを選択すると図形の表示に関するプログラムが表示される。その中から四角形を表示する部分だけを切り取る。
+
+```elm=
+
+import Html exposing (Html)
+import Svg exposing (..)
+import Svg.Attributes exposing (..)
+
+
+main : Html msg
+main =
+  svg
+    [ viewBox "0 0 400 400"
+    , width "400"
+    , height "400"
+    ]
+    [ rect
+        [ x "100"
+        , y "10"
+        , width "40"
+        , height "40"
+        , fill "green"
+        , stroke "black"
+        , strokeWidth "2"
+        ]
+        []
+    ]
+    
+```
+
+![](https://i.imgur.com/Fyv4faN.png)
+
+するとこのような四角形が表示される。
+
+次に、プログラムの内容を少し変えてみる。
+
+![](https://i.imgur.com/5NNMbPx.png)
+
+x,yの値を変更したら座標が変化した。
+
+![](https://i.imgur.com/Yo0lGE5.png)
+
+
+width,heightの値を変更したら大きさが変化した。
+
+![](https://i.imgur.com/KMys446.png)
+
+fillの中身を変更したら色が変化した。
+
+![](https://i.imgur.com/k8AW4IQ.png)
+
+strokeの中身を変更したら縁の色が変化した。
+
+![](https://i.imgur.com/kqwFS2F.png)
+
+strokewidthの値を変更したら縁の太さが変化した。
+
+<br>
+
+これで四角形の表示は可能になった。
+
+<br>
+
+次に、マウスの座標を取得する。
+elmで書かれたマウスの座標を取得するプログラムを見つけたため、今回はそれを参考とする。
+
+```elm=
+import Browser
+import Html exposing (..)
+import Html.Events exposing (on)
+import Html.Attributes exposing (style)
+import Json.Decode exposing (map2, field, int)
+
+main =
+  Browser.sandbox
+    { init = init
+    , update = update
+    , view = view
+    }
+
+type alias Model = { x: Int , y: Int }
+
+init : Model
+init = { x = 0 , y = 0 }
+
+type Msg = Move Int Int
+
+update : Msg -> Model -> Model
+update msg model =
+  case msg of
+    Move x y -> {x = x, y = y}
+
+view : Model -> Html Msg
+view model =
+  div []
+    [ span
+        []
+        [ text ("(" ++ (String.fromInt model.x) ++ ", " ++ String.fromInt model.y ++ ")") ]
+    , div
+        [ style "background-color" "gray"
+        , style "height" "80vh"
+        , on "mousemove" (map2 Move (field "clientX" int) (field "clientY" int))
+        ]
+        []
+    ]
+    
+```
+
+このプログラムを実行すると、灰色のところにマウスカーソルがある際に、その座標を表示してくれる。
+
+![](https://i.imgur.com/fNNJVhP.png)
+
+次に、マウスをクリックすることで何かしらのアクションが起きるものを作る。
 まず、マウスが押されたときに色が変化し、離すと色が戻るものをつくる。
 
 <details>
@@ -265,16 +385,9 @@ onMouseMove f =
 </details>
 
 上のコードでドラッグ＆ドロップはできるようになった。
-しかし、問題点がいくつかある。
+しかし、図形をクリックした際に、どこをつかんでも図形の左上をつかんでしまう。なので、それを修正する。
 
-１. マウスを早く動かすとドラッグ中じゃないのにマウスカーソルを追従してしまうことがある。
-2.　offsetを使用していない。
-3.　コードが短くまとまっていない。
-
-なので、次回までにこの3つの問題を解決しようと思う。
-
-
-解決
+修正したのが以下のコードである。
 
 <details>
 <summary>ソースコード</summary>
@@ -349,3 +462,5 @@ onMouseMove f =
  
 ```
 </details>
+
+これで、図形のドラッグ＆ドロップが完成した。
