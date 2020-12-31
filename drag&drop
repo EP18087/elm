@@ -1,0 +1,66 @@
+import Browser
+import Html exposing (..)
+import Html.Attributes exposing (..)
+import Html.Events exposing (..)
+import Json.Decode exposing (..)
+
+main = Browser.sandbox{init=init, view=view, update=update}
+
+type alias Model = {x:Int, y:Int, dragflag:Bool, ox:Int, oy:Int}
+
+init : Model
+init = {x = 50, y = 50, dragflag = False, ox = 0, oy = 0}
+
+type Msg = Down
+         | Up
+         | Move Int Int
+
+update : Msg -> Model -> Model
+update msg model =
+  case msg of
+    Down -> {model | dragflag = True}
+    Up -> {model | dragflag = False}
+    Move x y ->
+      {model
+        | x = if (model.dragflag == True) then x - model.ox
+              else model.x
+        , y = if (model.dragflag == True) then y - model.oy
+              else model.y
+        , ox = if (model.dragflag == True) then model.ox
+              else x - model.x
+        , oy = if (model.dragflag == True) then model.oy
+              else y - model.y              
+       }
+              
+view : Model -> Html Msg
+view model =
+  div[]
+  [ span
+    []
+    [ text ("(" ++ (String.fromInt model.x) ++ ", " ++ String.fromInt model.y ++ ")") ]
+  , div
+    [ style "position" "absolute"
+    , style "width" "1000px"
+    , style "height" "80vh"
+    , style "background" "gray"
+    , onMouseMove Move
+    , onMouseUp Up
+    ]
+    []
+  , div
+    [ style "background-color" "black" 
+    , style "height" "50px"
+    , style "width" "50px"
+    , style "position" "absolute"
+    , style "left" (String.fromInt model.x ++ "px")
+    , style "top" (String.fromInt model.y ++ "px")
+    , onMouseDown Down
+    , onMouseUp Up    
+    , onMouseMove Move
+    ]
+    []
+  ]
+
+onMouseMove : (Int -> Int -> msg) -> Html.Attribute msg
+onMouseMove f =
+  on "mousemove" (map2 f (field "clientX" int) (field "clientY" int))
